@@ -1,54 +1,116 @@
-class FuzzySet:
-    def __init__(self,linguisticValue,membershipFunction):
-        self.linguisticValue=linguisticValue
-        self.membershipFunction=membershipFunction
-
 class LinguisticVariable:
 
-    def __init__(self,variableName):
-        self.variableName=variableName
+    def __init__(self,name):
+        self.name=name
         self.fuzzySets=[]
 
-    def addFuzzySet(self,fuzzySet: FuzzySet):
+    class FuzzySet:
+        def __init__(self,linguisticVariable,linguisticValue,membershipFunction,nparams=1):
+            self.linguisticVariable=linguisticVariable
+            self.linguisticValue=linguisticVariable.name+" is "+linguisticValue
+            self.membershipFunction=membershipFunction
+
+    def addFuzzySet(self,linguisticValue,membershipFunction):
+        fuzzySet=LinguisticVariable.FuzzySet(
+            linguisticVariable=self, linguisticValue=linguisticValue, membershipFunction=membershipFunction
+            )
         self.fuzzySets.append(fuzzySet)
 
-class Logic:
+    class FuzzyLogic:
+        @staticmethod
+        def Or(fuzzySet1,fuzzySet2):
+            def membershipFunction(x,y):
 
-    def fuzzyOr(membershipFunction1,membershipFunction2):
+                return max(fuzzySet1.membershipFunction(x),fuzzySet2.membershipFunction(y))
 
-        return lambda x,y:min(membershipFunction1(x),membershipFunction2(y))
+            fuzzySet=LinguisticVariable.FuzzySet(
+                linguisticVariable=LinguisticVariable(
+                    name=fuzzySet1.linguisticVariable.name+" or "+fuzzySet2.linguisticVariable.name
+                ),
+                linguisticValue=fuzzySet1.linguisticValue+" or "+fuzzySet2.linguisticValue,
+                membershipFunction=membershipFunction
+            )
 
-    def fuzzyAnd(membershipFunction1,membershipFunction2):
+            return fuzzySet
 
-        return lambda x,y:max(membershipFunction1(x),membershipFunction2(y))
+        @staticmethod
+        def And(fuzzySet1,fuzzySet2):
+            def membershipFunction(x,y):
 
-    def fuzzyNot(membershipFunction):
+                return min(fuzzySet1.membershipFunction(x),fuzzySet2.membershipFunction(y))
 
-        return lambda x:1-membershipFunction(x)
+            fuzzySet=LinguisticVariable.FuzzySet(
+                linguisticVariable=LinguisticVariable(
+                    name=fuzzySet1.linguisticVariable.name+" and "+fuzzySet2.linguisticVariable.name
+                ),
+                linguisticValue=fuzzySet1.linguisticValue+" and "+fuzzySet2.linguisticValue,
+                membershipFunction=membershipFunction
+            )
 
-    def fuzzyImplication(antecedentMF,consequentMF):
+            return fuzzySet
 
-        return Logic.fuzzyOr(Logic.fuzzyNot(antecedentMF),consequentMF)
+        @staticmethod
+        def IfThen(fuzzySetOfAntecedent,fuzzySetOfConsequent):
+            def membershipFunction(x,y):
 
-    def aggregate_madmani(funcArray):
+                return max(1-fuzzySetOfAntecedent.membershipFunction(x),fuzzySetOfConsequent.membershipFunction(y))
 
-        return lambda x:max([f(x) for f in funcArray])
 
-def madmaniMethod(inputLinguisticVariable1,inputLinguisticVariable2,outputLinguisticVariable,inferenceRules):
-    # Suppose inputLinguisticVariable1.membershipFunction is a function of a
-    #         inputLinguisticVariable2.membershipFunction is a function of b
-    #     and outputLinguisticVariable.membershipFunction is a function of x
+            fuzzySet=LinguisticVariable.FuzzySet(
+                linguisticVariable=LinguisticVariable(
+                    name="If "+fuzzySetOfAntecedent.linguisticVariable.name+" then "+fuzzySetOfConsequent.linguisticVariable.name
+                ),
+                linguisticValue="If "+fuzzySetOfAntecedent.linguisticValue+" then "+fuzzySetOfConsequent.linguisticValue,
+                membershipFunction=membershipFunction
+            )
 
-    ruleOutputs=[inferenceRule(inputLinguisticVariable1,inputLinguisticVariable2,outputLinguisticVariable) for inferenceRule in inferenceRules]
+            return fuzzySet
 
-    # This is a function of ((a,b),x)
-    aggregatedFunction=Logic.aggregate_madmani(ruleOutputs)
+        @staticmethod
+        def IfAndThen(fuzzySetOfAntecedent1,fuzzySetOfAntecedent2,fuzzySetOfConsequent):
+            def membershipFunction(x,y,z):
 
-    pass
+                return max(1-min(fuzzySetOfAntecedent1.membershipFunction(x),fuzzySetOfAntecedent2.membershipFunction(y)),fuzzySetOfConsequent.membershipFunction(y))
+
+
+            fuzzySet=LinguisticVariable.FuzzySet(
+                linguisticVariable=LinguisticVariable(
+                    name="If "+fuzzySetOfAntecedent1.linguisticVariable.name+
+                    " and "+fuzzySetOfAntecedent2.linguisticVariable.name+" then "+fuzzySetOfConsequent.linguisticVariable.name
+                ),
+                linguisticValue="If "+fuzzySetOfAntecedent1.linguisticValue+" and "+fuzzySetOfAntecedent2.linguisticValue+" then "+fuzzySetOfConsequent.linguisticValue,
+                membershipFunction=membershipFunction
+            )
+
+            return fuzzySet
+
+
+class Mamdani:
+    def __init__(self,inferenceRules,outputDomain):
+        self.inferenceRules=inferenceRules
+        self.outputDomain=outputDomain
+
+    def aggregate(self):
+        return lambda x,y,z:max([inferenceRule(x,y,z) for inferenceRule in self.inferenceRules])
+
+    def method(self):
+        aggregatedFunction=self.aggregate()
+
+        startOfOutputDomain,endOfOutputDomain=self.outputDomain
+        def numerator(x,y):
+            fNum=lambda z:aggregatedFunction(x,y,z)*z
+            return utils.integrate(fNum,startOfOutputDomain,endOfOutputDomain)
+
+        def denominator(x,y):
+            fDenom=lambda z:aggregatedFunction(x,y,z)*z
+            return utils.integrate(fDenom,startOfOutputDomain,endOfOutputDomain)
+
+        return lambda x,y:numerator(x,y)/denominator(x,y)
 
 class utils:
 
-    def createTriangularFunction(leftBasepoint,tipPoint,rightBasepoint):
+    def createTriangularFunction(pointArray):
+        leftBasepoint,tipPoint,rightBasepoint = pointArray
         def triangularFunction(x):
             outputValue=0
 
@@ -61,3 +123,15 @@ class utils:
 
             return outputValue
         return triangularFunction
+
+
+    def integrate(f,a,b):
+        # Integrate a function f over a domain [a,b].
+        n=10000
+        h=(b-a)/n
+        int=0
+
+        for i in range(n):
+            int+=(h*f(a+i*h))
+
+        return int
