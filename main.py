@@ -1,4 +1,5 @@
 import libfuzzy
+import visualize
 
 ### Declare linguistic variables
 ## Input variables
@@ -48,35 +49,18 @@ for i in range(5):
             gradesOfSemester1.fuzzySets[i],
             gradesOfSemester2.fuzzySets[j],
             finalPerformance.fuzzySets[(i+j)//2]
-        ).membershipFunction
+        )\
+        # .membershipFunction
 
-def madmaniMethod(inputLinguisticVariable1,inputLinguisticVariable2,outputLinguisticVariable,inferenceRules,outputDomain):
-    # Suppose inputLinguisticVariable1.membershipFunction is a function of a
-    #         inputLinguisticVariable2.membershipFunction is a function of b
-    #     and outputLinguisticVariable.membershipFunction is a function of x
+## Debugging
+for i in range(5):
+    for j in range(5):
+        print(inferenceRules[5*i+j].linguisticValue)
+        inferenceRules[5*i+j]=inferenceRules[5*i+j].membershipFunction
 
-    # ruleOutputs=[inferenceRule(inputLinguisticVariable1,inputLinguisticVariable2,outputLinguisticVariable) for inferenceRule in inferenceRules]
-
-    # This is a function of (a,b,x)
-    aggregatedFunction=lambda a,b,x: max([f(a,b,x) for f in inferenceRules])
-
-    def numeratorFunction(a,b):
-
-        return lambda x: x*aggregatedFunction(a,b,x)
-
-    def denominatorFunction(a,b):
-
-        return lambda x: aggregatedFunction(a,b,x)
-
-    domain_a,domain_b=outputDomain
-
-    return lambda a,b:(libfuzzy.utils.integrate(numeratorFunction(a,b),domain_a,domain_b))/(libfuzzy.utils.integrate(denominatorFunction(a,b),domain_a,domain_b))
-
-currentMamdani=libfuzzy.Mamdani(
+finalFunction=libfuzzy.Mamdani(
     inferenceRules=inferenceRules,
     outputDomain=[0,1]
-    )
+    ).method()
 
-finalFunction=currentMamdani.method()
-
-print(finalFunction(50,50))
+visualize.visualize_surface(mamdaniResult=finalFunction,domainOfInput1=[0,100],domainOfInput2=[0,100],numberOfPoints1=15,numberOfPoints2=15)

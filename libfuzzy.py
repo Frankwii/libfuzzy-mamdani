@@ -1,3 +1,5 @@
+import scipy
+
 class LinguisticVariable:
 
     def __init__(self,name):
@@ -5,7 +7,7 @@ class LinguisticVariable:
         self.fuzzySets=[]
 
     class FuzzySet:
-        def __init__(self,linguisticVariable,linguisticValue,membershipFunction,nparams=1):
+        def __init__(self,linguisticVariable,linguisticValue,membershipFunction):
             self.linguisticVariable=linguisticVariable
             self.linguisticValue=linguisticVariable.name+" is "+linguisticValue
             self.membershipFunction=membershipFunction
@@ -68,17 +70,21 @@ class LinguisticVariable:
 
         @staticmethod
         def IfAndThen(fuzzySetOfAntecedent1,fuzzySetOfAntecedent2,fuzzySetOfConsequent):
-            def membershipFunction(x,y,z):
+            IMF1=fuzzySetOfAntecedent1.membershipFunction
+            IMF2=fuzzySetOfAntecedent2.membershipFunction
+            OMF=fuzzySetOfConsequent.membershipFunction
 
-                return max(1-min(fuzzySetOfAntecedent1.membershipFunction(x),fuzzySetOfAntecedent2.membershipFunction(y)),fuzzySetOfConsequent.membershipFunction(y))
+            membershipFunction=lambda x,y,z:min(IMF1(x),IMF2(y),OMF(z))
 
 
             fuzzySet=LinguisticVariable.FuzzySet(
                 linguisticVariable=LinguisticVariable(
-                    name="If "+fuzzySetOfAntecedent1.linguisticVariable.name+
-                    " and "+fuzzySetOfAntecedent2.linguisticVariable.name+" then "+fuzzySetOfConsequent.linguisticVariable.name
+                    name="Inference Rule: "
                 ),
-                linguisticValue="If "+fuzzySetOfAntecedent1.linguisticValue+" and "+fuzzySetOfAntecedent2.linguisticValue+" then "+fuzzySetOfConsequent.linguisticValue,
+                linguisticValue=\
+                    "If "+fuzzySetOfAntecedent1.linguisticValue\
+                    +" and "+fuzzySetOfAntecedent2.linguisticValue\
+                    +" then "+fuzzySetOfConsequent.linguisticValue,
                 membershipFunction=membershipFunction
             )
 
@@ -102,7 +108,7 @@ class Mamdani:
             return utils.integrate(fNum,startOfOutputDomain,endOfOutputDomain)
 
         def denominator(x,y):
-            fDenom=lambda z:aggregatedFunction(x,y,z)*z
+            fDenom=lambda z:aggregatedFunction(x,y,z)
             return utils.integrate(fDenom,startOfOutputDomain,endOfOutputDomain)
 
         return lambda x,y:numerator(x,y)/denominator(x,y)
@@ -127,11 +133,5 @@ class utils:
 
     def integrate(f,a,b):
         # Integrate a function f over a domain [a,b].
-        n=10000
-        h=(b-a)/n
-        int=0
 
-        for i in range(n):
-            int+=(h*f(a+i*h))
-
-        return int
+        return scipy.integrate.quad(f,a,b)[0]
