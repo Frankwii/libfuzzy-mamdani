@@ -63,4 +63,8 @@ finalFunction=libfuzzy.Mamdani(
     outputDomain=[0,1]
     ).method()
 
-visualize.visualize_surface(mamdaniResult=finalFunction,domainOfInput1=[0,100],domainOfInput2=[0,100],numberOfPoints1=15,numberOfPoints2=15)
+def diffFunction(x,y):
+
+    return finalFunction(x,y)-(x+y)/200
+
+visualize.visualize_surface(functionToPlot=diffFunction,domainOfInput1=[0,100],domainOfInput2=[0,100],numberOfPoints1=15,numberOfPoints2=15)
