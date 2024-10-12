@@ -39,18 +39,20 @@ inferenceRules=[0]*25
 
 for i in range(5):
     for j in range(5):
-        # inferenceRules[5*i+j]=libfuzzy.Logic.fuzzyIfAndThen(
-        #     gradesOfSemester1.fuzzySets[i].membershipFunction,
-        #     gradesOfSemester2.fuzzySets[j].membershipFunction,
-        #     finalPerformance.fuzzySets[(i+j)//2].membershipFunction
-        # )
-        inferenceRules[5*i+j]=\
-        libfuzzy.LinguisticVariable.FuzzyLogic.IfAndThen(
-            gradesOfSemester1.fuzzySets[i],
-            gradesOfSemester2.fuzzySets[j],
-            finalPerformance.fuzzySets[(i+j)//2]
-        )\
-        # .membershipFunction
+        if i<2 or (i==2 and j<=2):
+            inferenceRules[5*i+j]=\
+                    libfuzzy.LinguisticVariable.FuzzyLogic.IfAndThen(
+                            gradesOfSemester1.fuzzySets[i],
+                            gradesOfSemester2.fuzzySets[j],
+                            finalPerformance.fuzzySets[(i+j)//2]
+            )
+        else:
+            inferenceRules[5*i+j]=\
+                    libfuzzy.LinguisticVariable.FuzzyLogic.IfAndThen(
+                            gradesOfSemester1.fuzzySets[i],
+                            gradesOfSemester2.fuzzySets[j],
+                            finalPerformance.fuzzySets[(i+j)//2+(i+j)%2]
+            )
 
 ## Debugging
 for i in range(5):
