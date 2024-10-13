@@ -19,6 +19,7 @@ def visualize_surface(functionToPlot,domainOfInput1,domainOfInput2,numberOfPoint
     # Plot the surface
   fig, ax = plot.subplots(subplot_kw={"projection": "3d"})
   ax.plot_surface(X, Y, Z, vmin=Z.min() * 2, cmap=cm.Blues)
+  #ax.zaxis.set_ticklabels([])
 
   plot.xlabel("Semester 1")
   plot.ylabel("Semester 2")
