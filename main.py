@@ -77,3 +77,9 @@ def diffFunction(x,y):
     return finalFunction(x,y)-(x+y)/200
 
 visualize.visualize_surface(functionToPlot=diffFunction,domainOfInput1=[0,100],domainOfInput2=[0,100],numberOfPoints1=15,numberOfPoints2=15)
+
+# values of the function depending on differents inputs
+for i in range(0,101,25):
+    for j in range(0,101,25):
+        print(f"Semester 1: {i}, Semester 2: {j}, fuzzy: {finalFunction(i,j)} ")
+
