@@ -20,6 +20,9 @@ def visualize_surface(functionToPlot,domainOfInput1,domainOfInput2,numberOfPoint
   fig, ax = plot.subplots(subplot_kw={"projection": "3d"})
   ax.plot_surface(X, Y, Z, vmin=Z.min() * 2, cmap=cm.Blues)
 
+  plot.xlabel("Semester 1")
+  plot.ylabel("Semester 2")
+  
   plot.show()
 
   # figure = matplotlib.pyplot.figure()
