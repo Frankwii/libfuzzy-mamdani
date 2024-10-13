@@ -53,6 +53,13 @@ for i in range(5):
                             gradesOfSemester2.fuzzySets[j],
                             finalPerformance.fuzzySets[(i+j)//2+(i+j)%2]
             )
+    else:
+        inferenceRules[5*i+j]=\
+            libfuzzy.LinguisticVariable.FuzzyLogic.IfAndThen(
+                    gradesOfSemester1.fuzzySets[i],
+                    gradesOfSemester2.fuzzySets[j],
+                    finalPerformance.fuzzySets[(i+j)//2+(i+j)%2]
+        )
 
 ## Debugging
 for i in range(5):
